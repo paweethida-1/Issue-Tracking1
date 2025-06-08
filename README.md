@@ -1,5 +1,8 @@
 # Issue Tracking System  💒
 
+
+Plan https://www.notion.so/206a1dc1839e802c9d97f9f16c5bda9f?v=206a1dc1839e8084b1ff000cb869ce7e&source=copy_link
+
 This is an issue tracking system with the following components:
 
 ## Update Code
