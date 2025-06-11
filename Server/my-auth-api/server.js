@@ -8,6 +8,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 🔥 Health Check Endpoint
+app.get('/', (req, res) => {
+  console.log('GET / received');
+  res.send('Server is running');
+});
+
 app.use('/api', authRoutes);
 
 const PORT = process.env.PORT || 5000;
