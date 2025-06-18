@@ -15,20 +15,88 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String?
-  name      String?
-  picture   String?
-  role      Role     @default(USER) // e.g., "user", "admin"
-  enabled   Boolean  @default(true)
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int       @id @default(autoincrement())
+  name        String
+  department  String
+  employeeId  String    @unique
+  email       String    @unique
+  password    String
+  role        Role
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  actionsTaken  StatusLog[]  @relation("UserActionLogs")
+
+  requests    ServiceRequest[]     @relation("UserRequests")
+  assigned  ServiceRequest[]   @relation("StaffAssigned")
+  teamMembers TeamMember[]         @relation("TeamUser")
+}
+
+model ServiceRequest {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String
+  department    String
+  serviceType   String
+  requestDate   DateTime
+  status        Status    @default(PENDING)
+  priority      Priority?
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  userId        Int
+  user          User      @relation("UserRequests", fields: [userId], references: [id])
+  assignedToId  Int?
+  assignedTo    User?     @relation("StaffAssigned", fields: [assignedToId], references: [id])
+
+  logs          StatusLog[]
+  team          TeamMember[]
+}
+
+model StatusLog {
+  id             Int       @id @default(autoincrement())
+  status         Status
+  timestamp      DateTime  @default(now())
+  actionById       Int
+  actionBy         User      @relation("UserActionLogs", fields: [actionById], references: [id])
+
+  serviceRequestId Int
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+}
+
+model TeamMember {
+  id         Int       @id @default(autoincrement())
+  requestId  Int
+  userId     Int
+  role       TeamRole
+
+  request    ServiceRequest @relation(fields: [requestId], references: [id])
+  user       User           @relation("TeamUser", fields: [userId], references: [id])
 }
 
 enum Role {
-  admin
-  STAFF
   USER
+  ADMIN
+  STAFF
+  ADMIN_STAFF
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  RETURNED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TeamRole {
+  LEADER
+  MEMBER
 }
