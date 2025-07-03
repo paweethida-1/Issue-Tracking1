@@ -12,9 +12,11 @@ app.use(morgan('dev')); // logging middleware
 app.use(express.json()); // parse JSON bodies
 app.use(cors()); // enable CORS for all routes
 
+//เพิ่มตรงนี้
+
 // app.use('/api',authRouter); // use authRouter for routes starting with /api
 readdirSync('./routes')
-.map((c)=> app.use('/api', require('./routes/' + c)) );
+.map((file)=> app.use('/api', require('./routes/' + file)) );
 
 //step 3 Router
 // app.post('/api',(req,res)=>{
