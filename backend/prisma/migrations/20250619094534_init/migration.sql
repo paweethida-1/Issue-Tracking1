@@ -1,26 +1,20 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `department` VARCHAR(191) NOT NULL,
+    `employeeId` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `role` ENUM('USER', 'ADMIN', 'STAFF', 'ADMIN_STAFF') NOT NULL,
+    `enabled` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
-  - You are about to drop the column `address` on the `user` table. All the data in the column will be lost.
-  - You are about to drop the column `enabled` on the `user` table. All the data in the column will be lost.
-  - You are about to drop the column `picture` on the `user` table. All the data in the column will be lost.
-  - You are about to alter the column `role` on the `user` table. The data in that column could be lost. The data in that column will be cast from `Enum(EnumId(0))` to `Enum(EnumId(0))`.
-  - A unique constraint covering the columns `[employeeId]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `department` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `employeeId` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Made the column `password` on table `user` required. This step will fail if there are existing NULL values in that column.
-  - Made the column `name` on table `user` required. This step will fail if there are existing NULL values in that column.
-
-*/
--- AlterTable
-ALTER TABLE `user` DROP COLUMN `address`,
-    DROP COLUMN `enabled`,
-    DROP COLUMN `picture`,
-    ADD COLUMN `department` VARCHAR(191) NOT NULL,
-    ADD COLUMN `employeeId` VARCHAR(191) NOT NULL,
-    MODIFY `password` VARCHAR(191) NOT NULL,
-    MODIFY `name` VARCHAR(191) NOT NULL,
-    MODIFY `role` ENUM('USER', 'ADMIN', 'STAFF', 'ADMIN_STAFF') NOT NULL;
+    UNIQUE INDEX `User_employeeId_key`(`employeeId`),
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `ServiceRequest` (
@@ -61,9 +55,6 @@ CREATE TABLE `TeamMember` (
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateIndex
-CREATE UNIQUE INDEX `User_employeeId_key` ON `User`(`employeeId`);
 
 -- AddForeignKey
 ALTER TABLE `ServiceRequest` ADD CONSTRAINT `ServiceRequest_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

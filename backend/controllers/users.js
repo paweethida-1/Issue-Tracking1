@@ -1,43 +1,48 @@
 const prisma = require("../config/prisma");
+const bcrypt = require("bcryptjs");
 
+// ดึง user ทั้งหมด
 exports.list = async (req, res) => {
   try {
-    const user = await prisma.user.findMany({});
-
-    res.json(user);
+    const users = await prisma.user.findMany({});
+    res.json(users);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
+// อัปเดตข้อมูล user (name, email, department, password (ถ้ามี))
 exports.update = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { email } = req.body;
+    const { name, email, department, password } = req.body;
+
+    const dataToUpdate = { name, email, department };
+
+    if (password && password.trim() !== "") {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      dataToUpdate.password = hashedPassword;
+    }
+
     const updatedUser = await prisma.user.update({
-      where: {
-        id: Number(userId),
-      },
-      data: {
-        email: email,
-      },
+      where: { id: Number(userId) },
+      data: dataToUpdate,
     });
 
-    res.json({ message: "Update success" });
+    res.json({ message: "Update success", updatedUser });
   } catch (error) {
-    console.log(error);
+    console.error("Update error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
+// ลบ user
 exports.remove = async (req, res) => {
   try {
     const { userId } = req.params;
-    const removed = await prisma.user.delete({
-      where: {
-        id: Number(userId),
-      },
+    await prisma.user.delete({
+      where: { id: Number(userId) },
     });
 
     res.status(200).json({ message: "Deleted success" });
@@ -47,40 +52,40 @@ exports.remove = async (req, res) => {
   }
 };
 
+// เปลี่ยนสถานะ enabled/disabled
+exports.changeStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { enabled } = req.body;  // ควรใช้ enabled ตาม frontend
 
-// exports.changeStatus = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const { status } = req.body;
-//     const updatedUser = await prisma.user.update({
-//       where: {
-//         id: Number(userId),
-//       },
-//     });
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(userId) },
+      data: { enabled },
+    });
 
-//     res.status(200).json({ message: "Change-Status success" });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
+    res.status(200).json({ message: "Change-Status success", updatedUser });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
-// exports.changeRole = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const { role } = req.body;
-//     const updatedUser = await prisma.user.update({
-//       where: {
-//         id: Number(userId),
-//       },
-//       data: {
-//         role: role,
-//       },
-//     });
+// เปลี่ยน role
+exports.changeRole = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
 
-//     res.status(200).json({ message: "Change-Role success" });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(userId) },
+      data: { role },
+    });
+
+    res.status(200).json({ message: "Change-Role success", updatedUser });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+

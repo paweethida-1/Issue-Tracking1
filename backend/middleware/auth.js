@@ -1,56 +1,60 @@
 const jwt = require("jsonwebtoken");
 const prisma = require("../config/prisma");
 
+// ✅ ตรวจสอบ JWT และแนบ user เข้า req.user
 exports.authCheck = async (req, res, next) => {
   try {
-    //code
     const headerToken = req.headers.authorization;
-    // console.log('YOYO',headerToken);
-    if (!headerToken) {
+    console.log("Authorization Header:", headerToken);// เพิ่ม log ดู header
+    if (!headerToken || !headerToken.startsWith("Bearer ")) {
       return res
         .status(401)
         .json({ message: "No token, authorization denied" });
     }
-    const token = headerToken.split(" ")[1]; // Bearer token
 
-    const decode = jwt.verify(token, process.env.SECRET);
-    req.user = decode; // Attach user info to request object
+    const token = headerToken.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.SECRET);
+    console.log("Decoded token:", decoded); // ดูข้อมูล decoded
 
+    // ใช้ id จาก decoded payload
     const user = await prisma.user.findUnique({
-      where: {
-        email: req.user.email,
-      },
+      where: { id: decoded.id },
     });
-    if (!user.enabled) {
-      return res.status(404).json({ message: "This account can not access" });
+
+    if (!user || !user.enabled) {
+      return res.status(403).json({ message: "This account cannot access" });
     }
 
+    req.user = {
+      userId: user.id,
+      name: user.name,
+      role: user.role,
+    }; // แนบ user object ทั้งตัวไว้ใช้งานถัดไป
+    console.log("User attached to req:", req.user);
     next();
   } catch (error) {
-    //error
-    console.log("Something wrong in middleware");
-    res.status(500).json({ message: "Token Invalid" });
+    console.error("Something went wrong in authCheck:", error.message);
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired" });
+    }
+
+    res.status(401).json({ message: "Token invalid" });
   }
 };
 
+// ✅ ตรวจสอบว่าผู้ใช้เป็น ADMIN หรือ ADMIN_STAFF
 exports.adminCheck = async (req, res, next) => {
   try {
-    //code
-    const { email } = req.user; // Get email from user info attached in authCheck
-    const adminUser = await prisma.user.findUnique({
-      where: {
-        email: email,
-      },
-    });
+    const { role } = req.user;
 
-    if (!adminUser || adminUser.role !== "admin") {
+    if (role !== "ADMIN" && role !== "ADMIN_STAFF") {
       return res.status(403).json({ message: "Access denied: Admin Only" });
     }
-//    console.log("Admin User", adminUser);
+
     next();
   } catch (error) {
-    //error
-    console.log(err);
+    console.error("Admin check error:", error.message);
     res.status(500).json({ message: "Admin access denied" });
   }
 };

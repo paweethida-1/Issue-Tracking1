@@ -5,11 +5,15 @@ const router = express.Router();
 const { list, update, remove, changeStatus, changeRole } = require('../controllers/users');
 // middlewares
 const { authCheck, adminCheck } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roleCheck'); // ✅ เพิ่ม
 
-router.get('/users', authCheck, adminCheck, list);
+// ✅ อนุญาต ADMIN, ADMIN_STAFF, STAFF
+router.get('/users', authCheck, requireRole(['ADMIN', 'ADMIN_STAFF', 'STAFF']), list);
+
+// เฉพาะ ADMIN เท่านั้น
 router.patch('/users/:userId', authCheck, adminCheck, update);
 router.delete('/users/:userId', authCheck, adminCheck, remove);
-// router.post('/Change-status',changeStatus, authCheck, adminCheck,);
-// router.post('/Change-role',changeRole, authCheck, adminCheck,);
+router.patch('/:userId/role', authCheck, adminCheck, changeRole);
+router.patch('/:userId/status', authCheck, adminCheck, changeStatus);
 
 module.exports = router;
